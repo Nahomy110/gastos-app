@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
@@ -8,14 +8,18 @@ app.use(express.json());
 app.use(express.static('public')); // Servirá la carpeta pública (frontend)
 
 // Configuración de conexión MySQL
-const dbPool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'gastos_familiares',
-  waitForConnections: true,
-  connectionLimit: 10
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false // Requerido para aceptar la conexión SSL de Aiven
+  }
 });
+
+module.exports = pool;
 
 // Login sencillo (Para producción se recomienda usar bcrypt y JWT)
 app.post('/api/login', async (req, res) => {
