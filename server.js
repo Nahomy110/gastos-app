@@ -22,28 +22,38 @@ const dbPool = mysql.createPool({
 
 module.exports = dbPool;
 
-// Login
-// Login con diagnóstico directo de errores SQL
+const bcrypt = require('bcryptjs'); // Agregar al inicio de server.js si no está
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
+
   try {
+    // 1. Buscar usuario únicamente por email
     const [rows] = await dbPool.execute(
-      'SELECT id_usuario, nombre, email, rol FROM usuarios WHERE email = ? AND password = ?',
-      [email, password]
+      'SELECT id_usuario, nombre, email, password, rol FROM usuarios WHERE email = ?',
+      [email]
     );
-    
+
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'Usuario no encontrado' });
     }
-    
-    res.json({ user: rows[0] });
+
+    const usuario = rows[0];
+
+    // 2. Comparar la contraseña ingresada contra el hash guardado en MySQL
+    const esCorrecta = await bcrypt.compare(password, usuario.password);
+
+    if (!esCorrecta) {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
+    }
+
+    // 3. Login exitoso: eliminar la contraseña de la respuesta por seguridad
+    delete usuario.password;
+    res.json({ user: usuario });
+
   } catch (err) {
-    // Imprimir en la consola de Render el error real de la BD
-    console.error('ERROR DETALLADO EN LOGIN:', err);
-    
-    // Garantizar que devuelva una cadena legible al frontend
-    const mensajeReal = err.sqlMessage || err.message || String(err);
-    res.status(500).json({ error: mensajeReal });
+    console.error('ERROR EN LOGIN:', err);
+    res.status(500).json({ error: 'Error en el servidor al autenticar' });
   }
 });
 
