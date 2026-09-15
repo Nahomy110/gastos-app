@@ -23,6 +23,7 @@ const dbPool = mysql.createPool({
 module.exports = dbPool;
 
 // Login
+// Login con diagnóstico directo de errores SQL
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -30,12 +31,19 @@ app.post('/api/login', async (req, res) => {
       'SELECT id_usuario, nombre, email, rol FROM usuarios WHERE email = ? AND password = ?',
       [email, password]
     );
+    
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
+    
     res.json({ user: rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Imprimir en la consola de Render el error real de la BD
+    console.error('ERROR DETALLADO EN LOGIN:', err);
+    
+    // Garantizar que devuelva una cadena legible al frontend
+    const mensajeReal = err.sqlMessage || err.message || String(err);
+    res.status(500).json({ error: mensajeReal });
   }
 });
 
