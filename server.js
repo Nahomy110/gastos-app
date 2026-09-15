@@ -162,5 +162,21 @@ app.put('/api/admin/prestamos/:id_prestamo', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+app.post('/api/login', async (req, res) => {
+console.log('--- PETICIÓN DE LOGIN RECIBIDA ---', req.body);
+const { email, password } = req.body;
+try {
+  const [rows] = await dbPool.execute(
+    'SELECT id_usuario, nombre, email, rol FROM usuarios WHERE email = ? AND password = ?',
+    [email, password]
+  );
+  if (rows.length === 0) {
+    return res.status(401).json({ error: 'Credenciales inválidas' });
+  }
+  res.json({ user: rows[0] });
+} catch (err) {
+  console.error('ERROR BD:', err);
+  res.status(500).json({ error: err.message || 'Error en la base de datos' });
+  }
+});
 app.listen(3000, () => console.log('Servidor corriendo en el puerto 3000'));
