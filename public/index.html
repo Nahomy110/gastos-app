@@ -101,24 +101,38 @@
     };
 
     async function login(e) {
-      e.preventDefault();
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('loginEmail').value.trim();
+    const passwordInput = document.getElementById('loginPassword').value.trim();
+
+    try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: document.getElementById('loginEmail').value,
-          password: document.getElementById('loginPassword').value
+          email: emailInput,
+          password: passwordInput
         })
       });
+
       const data = await res.json();
+
       if (res.ok) {
         user = data.user;
         localStorage.setItem('user', JSON.stringify(user));
         showApp();
       } else {
-        alert(data.error);
+        // Muestra el mensaje enviado por el servidor o un texto por defecto si viene vacío
+        const mensajeError = data.error || 'Credenciales incorrectas o error en el servidor';
+        alert(mensajeError);
+        console.error('Error reportado por el servidor:', data);
       }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      alert('No se pudo conectar con el servidor. Revisa tu conexión a internet.');
     }
+  }
 
     function logout() {
       localStorage.removeItem('user');
