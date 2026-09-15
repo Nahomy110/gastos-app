@@ -12,15 +12,17 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 pb-20 select-none">
+<body class="bg-gray-100 font-sans text-gray-800 pb-20 select-none min-h-screen">
 
   <!-- Encabezado -->
-  <header class="bg-indigo-600 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-50">
-    <div>
-      <h1 class="text-xl font-bold">Gastos Familiares</h1>
-      <p id="userInfo" class="text-xs bg-indigo-800 px-2 py-0.5 rounded-full inline-block mt-1">Sesión no iniciada</p>
+  <header class="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold">Gastos Familiares</h1>
+        <p id="userInfo" class="text-xs bg-indigo-800 px-2 py-0.5 rounded-full inline-block mt-1">Sesión no iniciada</p>
+      </div>
+      <button id="btnLogout" onclick="logout()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg font-semibold transition">Salir</button>
     </div>
-    <button id="btnLogout" onclick="logout()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg">Salir</button>
   </header>
 
   <!-- Login -->
@@ -39,57 +41,73 @@
     </form>
   </section>
 
-  <!-- Contenido de la App -->
-  <main id="appContent" class="hidden p-4 max-w-lg mx-auto space-y-6">
+  <!-- Contenido de la App (Ancho adaptable para PC) -->
+  <main id="appContent" class="hidden p-4 md:p-8 max-w-7xl mx-auto space-y-6">
 
     <!-- Dashboard Mamá (Admin) -->
-    <section id="adminDashboard" class="hidden space-y-4">
-      <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow">
-        <h3 class="text-xs uppercase text-indigo-200">Gasto Familiar del Mes</h3>
-        <p id="totalFamilyExpenses" class="text-3xl font-extrabold mt-1">$0.00</p>
+    <section id="adminDashboard" class="hidden space-y-6">
+      <h2 class="text-xl font-bold text-indigo-900 border-b pb-2">Panel de Control - Administración</h2>
+      
+      <!-- Grid de Tarjetas del Admin -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card Total Mes -->
+        <div class="bg-indigo-900 text-white p-6 rounded-2xl shadow flex flex-col justify-center">
+          <h3 class="text-xs uppercase text-indigo-200 tracking-wider">Gasto Familiar del Mes</h3>
+          <p id="totalFamilyExpenses" class="text-4xl font-extrabold mt-2">$0.00</p>
+        </div>
+
+        <!-- Totales por familiar -->
+        <div class="bg-white p-6 rounded-2xl shadow space-y-3">
+          <h3 class="text-md font-bold text-gray-700">Gasto por Integrante</h3>
+          <div id="membersExpensesList" class="space-y-2 text-sm"></div>
+        </div>
+
+        <!-- Solicitudes de préstamo pendientes -->
+        <div class="bg-white p-6 rounded-2xl shadow space-y-3">
+          <h3 class="text-md font-bold text-amber-600">Solicitudes de Préstamo Pendientes</h3>
+          <div id="pendingLoansList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid de Formularios e Historial (2 Columnas en escritorio) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Columna Izquierda: Formulario de Gastos y Préstamos -->
+      <div class="space-y-6">
+        <!-- Formulario Registrar Gasto -->
+        <section class="bg-white p-6 rounded-2xl shadow space-y-4">
+          <h3 class="text-md font-bold text-gray-700">Registrar Nuevo Gasto</h3>
+          <form onsubmit="addExpense(event)" class="space-y-3">
+            <input type="number" step="0.01" id="expAmount" placeholder="Monto ($)" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <select id="expCategory" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+              <option value="" disabled selected>Selecciona Categoría</option>
+            </select>
+            <input type="text" id="expDesc" placeholder="Descripción (Ej. Pasaje, Almuerzo)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">Guardar Gasto</button>
+          </form>
+        </section>
+
+        <!-- Formulario Pedir Préstamo -->
+        <section class="bg-white p-6 rounded-2xl shadow space-y-4">
+          <h3 class="text-md font-bold text-emerald-700">Solicitar Préstamo a Mamá</h3>
+          <form onsubmit="requestLoan(event)" class="space-y-3">
+            <input type="number" step="0.01" id="loanAmount" placeholder="Monto Solicitado ($)" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <textarea id="loanReason" placeholder="Escribe el motivo..." required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 h-20"></textarea>
+            <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">Enviar Solicitud</button>
+          </form>
+        </section>
       </div>
 
-      <!-- Totales por familiar -->
-      <div class="bg-white p-5 rounded-2xl shadow space-y-3">
-        <h3 class="text-md font-bold text-gray-700">Gasto por Integrante</h3>
-        <div id="membersExpensesList" class="space-y-2 text-sm"></div>
+      <!-- Columna Derecha: Mi Historial -->
+      <div>
+        <section class="bg-white p-6 rounded-2xl shadow space-y-3 h-full">
+          <h3 class="text-md font-bold text-gray-700">Mi Historial Reciente</h3>
+          <div id="userActivityList" class="space-y-2 text-sm"></div>
+        </section>
       </div>
 
-      <!-- Solicitudes de préstamo pendientes -->
-      <div class="bg-white p-5 rounded-2xl shadow space-y-3">
-        <h3 class="text-md font-bold text-amber-600">Solicitudes de Préstamo Pendientes</h3>
-        <div id="pendingLoansList" class="space-y-3"></div>
-      </div>
-    </section>
-
-    <!-- Formulario para Registrar Gasto -->
-    <section class="bg-white p-5 rounded-2xl shadow space-y-4">
-      <h3 class="text-md font-bold text-gray-700">Registrar Nuevo Gasto</h3>
-      <form onsubmit="addExpense(event)" class="space-y-3">
-        <input type="number" step="0.01" id="expAmount" placeholder="Monto ($)" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-        <select id="expCategory" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-          <option value="" disabled selected>Selecciona Categoría</option>
-        </select>
-        <input type="text" id="expDesc" placeholder="Descripción (Ej. Pasaje, Almuerzo)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-        <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">Guardar Gasto</button>
-      </form>
-    </section>
-
-    <!-- Formulario Pedir Préstamo -->
-    <section class="bg-white p-5 rounded-2xl shadow space-y-4">
-      <h3 class="text-md font-bold text-emerald-700">Solicitar Préstamo a Mamá</h3>
-      <form onsubmit="requestLoan(event)" class="space-y-3">
-        <input type="number" step="0.01" id="loanAmount" placeholder="Monto Solicitado ($)" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-        <textarea id="loanReason" placeholder="Escribe el motivo..." required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 h-20"></textarea>
-        <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">Enviar Solicitud</button>
-      </form>
-    </section>
-
-    <!-- Mis Registros -->
-    <section class="bg-white p-5 rounded-2xl shadow space-y-3">
-      <h3 class="text-md font-bold text-gray-700">Mi Historial Reciente</h3>
-      <div id="userActivityList" class="space-y-2 text-sm"></div>
-    </section>
+    </div>
 
   </main>
 
@@ -101,36 +119,35 @@
     };
 
     async function login(e) {
-    e.preventDefault();
+      e.preventDefault();
 
-    // 1. Obtener el texto ingresado en los inputs del HTML
-    const emailInput = document.getElementById('loginEmail').value.trim();
-    const passwordInput = document.getElementById('loginPassword').value.trim();
+      const emailInput = document.getElementById('loginEmail').value.trim();
+      const passwordInput = document.getElementById('loginPassword').value.trim();
 
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: emailInput,
-          password: passwordInput
-        })
-      });
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailInput,
+            password: passwordInput
+          })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (res.ok) {
-        user = data.user;
-        localStorage.setItem('user', JSON.stringify(user));
-        showApp();
-      } else {
-        alert(data.error || 'Credenciales o datos incorrectos');
+        if (res.ok) {
+          user = data.user;
+          localStorage.setItem('user', JSON.stringify(user));
+          showApp();
+        } else {
+          alert(data.error || 'Credenciales o datos incorrectos');
+        }
+      } catch (err) {
+        console.error('Error al intentar iniciar sesión:', err);
+        alert('Error de conexión con el servidor');
       }
-    } catch (err) {
-      console.error('Error al intentar iniciar sesión:', err);
-      alert('Error de conexión con el servidor');
     }
-  }
 
     function logout() {
       localStorage.removeItem('user');
@@ -202,7 +219,7 @@
 
       gastos.forEach(g => {
         container.innerHTML += `
-          <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
             <div>
               <p class="font-bold text-gray-700">${g.categoria}</p>
               <p class="text-xs text-gray-400">${g.descripcion || ''}</p>
@@ -214,7 +231,7 @@
       prestamos.forEach(p => {
         let badgeColor = p.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' : (p.estado === 'aprobado' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700');
         container.innerHTML += `
-          <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
             <div>
               <p class="font-bold text-gray-700">Préstamo: $${parseFloat(p.monto).toFixed(2)}</p>
               <p class="text-xs text-gray-400">${p.motivo}</p>
@@ -234,8 +251,8 @@
       membersList.innerHTML = '';
       porIntegrante.forEach(m => {
         membersList.innerHTML += `
-          <div class="flex justify-between items-center border-b pb-1">
-            <span>${m.nombre}</span>
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="font-medium text-gray-600">${m.nombre}</span>
             <span class="font-bold text-indigo-600">$${parseFloat(m.total).toFixed(2)}</span>
           </div>`;
       });
@@ -254,8 +271,8 @@
               </div>
               <p class="text-xs text-gray-600">${p.motivo}</p>
               <div class="flex gap-2">
-                <button onclick="resolveLoan(${p.id_prestamo}, 'aprobado')" class="flex-1 bg-emerald-500 text-white py-1 rounded-lg text-xs font-bold">Aceptar</button>
-                <button onclick="resolveLoan(${p.id_prestamo}, 'rechazado')" class="flex-1 bg-red-500 text-white py-1 rounded-lg text-xs font-bold">Rechazar</button>
+                <button onclick="resolveLoan(${p.id_prestamo}, 'aprobado')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-1.5 rounded-lg text-xs font-bold transition">Aceptar</button>
+                <button onclick="resolveLoan(${p.id_prestamo}, 'rechazado')" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-1.5 rounded-lg text-xs font-bold transition">Rechazar</button>
               </div>
             </div>`;
         });
