@@ -1,27 +1,28 @@
 const express = require('express');
-const mysql = require('mysql2');
+// 1. IMPORTANTE: Requerir la versión con promesas para usar async/await
+const mysql = require('mysql2/promise'); 
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Servirá la carpeta pública (frontend)
+app.use(express.static('public'));
 
-// Configuración de conexión MySQL
-const pool = mysql.createPool({
+// 2. Renombrado a dbPool para que coincida con tus rutas
+const dbPool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
   ssl: {
-    rejectUnauthorized: false // Requerido para aceptar la conexión SSL de Aiven
+    rejectUnauthorized: false
   }
 });
 
-module.exports = pool;
+module.exports = dbPool;
 
-// Login sencillo (Para producción se recomienda usar bcrypt y JWT)
+// Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -107,14 +108,12 @@ app.get('/api/actividad/:id_usuario', async (req, res) => {
 // Reportes globales y solicitudes pendientes
 app.get('/api/admin/dashboard', async (req, res) => {
   try {
-    // Total global del mes
     const [totalRes] = await dbPool.execute(
       `SELECT COALESCE(SUM(monto), 0) AS total 
        FROM gastos 
        WHERE MONTH(fecha_gasto) = MONTH(CURRENT_DATE()) AND YEAR(fecha_gasto) = YEAR(CURRENT_DATE())`
     );
 
-    // Total por integrante en el mes
     const [porIntegrante] = await dbPool.execute(
       `SELECT u.nombre, COALESCE(SUM(g.monto), 0) AS total 
        FROM usuarios u 
@@ -124,7 +123,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
        GROUP BY u.id_usuario`
     );
 
-    // Solicitudes de préstamo pendientes
     const [pendientes] = await dbPool.execute(
       `SELECT p.id_prestamo, p.monto, p.motivo, p.fecha_solicitud, u.nombre 
        FROM prestamos p 
@@ -145,7 +143,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
 // Aprobar o rechazar préstamo
 app.put('/api/admin/prestamos/:id_prestamo', async (req, res) => {
-  const { estado } = req.body; // 'aprobado' o 'rechazado'
+  const { estado } = req.body;
   try {
     await dbPool.execute(
       'UPDATE prestamos SET estado = ?, fecha_respuesta = CURRENT_TIMESTAMP WHERE id_prestamo = ?',
