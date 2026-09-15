@@ -102,7 +102,8 @@
 
     async function login(e) {
     e.preventDefault();
-    
+
+    // 1. Obtener el texto ingresado en los inputs del HTML
     const emailInput = document.getElementById('loginEmail').value.trim();
     const passwordInput = document.getElementById('loginPassword').value.trim();
 
@@ -123,14 +124,11 @@
         localStorage.setItem('user', JSON.stringify(user));
         showApp();
       } else {
-        // Muestra el mensaje enviado por el servidor o un texto por defecto si viene vacío
-        const mensajeError = data.error || 'Credenciales incorrectas o error en el servidor';
-        alert(mensajeError);
-        console.error('Error reportado por el servidor:', data);
+        alert(data.error || 'Credenciales o datos incorrectos');
       }
-    } catch (error) {
-      console.error('Error de conexión:', error);
-      alert('No se pudo conectar con el servidor. Revisa tu conexión a internet.');
+    } catch (err) {
+      console.error('Error al intentar iniciar sesión:', err);
+      alert('Error de conexión con el servidor');
     }
   }
 
